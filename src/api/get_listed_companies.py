@@ -72,12 +72,12 @@ def save_to_csv(companies, filename="listed_companies.csv"):
 if __name__ == "__main__":
     companies = get_listed_companies()
     df = pd.DataFrame(companies)
-    display(df.head(500))
+    # display(df.head(500))
     if companies:
-        # 最初の5件を表示
-        for company in companies[1000:1100]:
+        # 最初の10件を表示
+        for company in companies[:10]:
             print(f"銘柄コード: {company.get('Code')}, 銘柄名: {company.get('CompanyName')}")
     
         # CSVファイルに保存
-        # save_to_csv(companies) 
+        save_to_csv(companies) 
 # %%
