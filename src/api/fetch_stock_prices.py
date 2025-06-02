@@ -118,5 +118,6 @@ def fetch_stock_prices():
         print("データの取得に失敗しました。")
 
 
-fetch_stock_prices()
+if __name__ == "__main__":
+    fetch_stock_prices()
 # %%
