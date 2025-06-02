@@ -12,3 +12,6 @@ __pycache__/
 # Data files
 data/raw/*
 !data/raw/.gitkeep 
+
+# macOS
+.DS_Store
