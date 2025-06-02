@@ -84,7 +84,7 @@ def fetch_stock_prices():
     if not id_token:
         raise ValueError("環境変数 JQUANTS_ID_TOKEN が設定されていません。")
 
-    # 株価データの取得期間を設定（過去1年）
+    # 株価データの取得期間を設定
     to_date = datetime.now().strftime("%Y-%m-%d")
     from_date = (datetime.now() - timedelta(days=(365*3))).strftime("%Y-%m-%d")
 
