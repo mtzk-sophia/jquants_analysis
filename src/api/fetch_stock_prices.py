@@ -73,10 +73,13 @@ def load_listed_companies():
 
 
 def fetch_stock_prices():
+    target_market = ['プライム', 'スタンダード']
+    target_sector = ['情報･通信業', 'サービス業', '銀行', '精密機器', '金属製品']
+
     df = load_listed_companies()
     df_prime_bank = df[
-        (df["MarketCodeName"]=="プライム")
-        & (df["Sector17CodeName"]=="銀行")
+        (df["MarketCodeName"].isin(target_market))
+        & (df["Sector33CodeName"].isin(target_sector))
     ]
 
     # 環境変数からIDトークンを取得
@@ -90,7 +93,6 @@ def fetch_stock_prices():
 
     # 各企業の株価データを取得
     all_stock_prices = []
-    print(id_token, to_date, from_date)
 
     for _, row in df_prime_bank.iterrows():
         code = row["Code"]
@@ -107,11 +109,11 @@ def fetch_stock_prices():
     # データを結合
     if all_stock_prices:
         combined_data = pd.concat(all_stock_prices, ignore_index=True)
-
+        print(combined_data.shape)
         # データを保存
         output_dir = Path(__file__).parent.parent.parent / 'data' / 'processed'
         output_dir.mkdir(parents=True, exist_ok=True)
-        output_file = output_dir / 'stock_prices_prime_bank.csv'
+        output_file = output_dir / 'stock_prices.csv'
         combined_data.to_csv(output_file, index=False)
         print(f"\nデータを保存しました: {output_file}")
     else:
