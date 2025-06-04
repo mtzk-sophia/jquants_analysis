@@ -17,7 +17,8 @@ def load_stock_prices():
     Returns:
         pd.DataFrame: 株価データ
     """
-    file_path = Path(__file__).parent.parent / 'data' / 'processed' / 'stock_prices_prime_bank.csv'
+    file_name = 'stock_prices.csv'
+    file_path = Path(__file__).parent.parent / 'data' / 'processed' / file_name
     df = pd.read_csv(
         file_path,
         dtype={'Code': str,},
@@ -26,13 +27,13 @@ def load_stock_prices():
     return df
 
 
-def get_recent_cross_companies(df: pd.DataFrame, days: int = 5, cross_type: str = 'both') -> pd.DataFrame:
+def get_recent_cross_companies(df: pd.DataFrame, days: int = 3, cross_type: str = 'both') -> pd.DataFrame:
     """
     直近の指定日数でMACDのクロスが発生した企業を取得
     
     Args:
         df (pd.DataFrame): 株価データ
-        days (int): 直近何日分を確認するか（デフォルト: 5）
+        days (int): 直近何日分を確認するか（デフォルト: 3）
         cross_type (str): クロスの種類（'golden', 'dead', 'both'）
     
     Returns:
@@ -126,7 +127,7 @@ def plot_stock_info_streamlit(df, code, company_name, title: str = "株価チャ
             x=stock_data["Date"],
             y=stock_data['SMA25'],
             name='SMA25',
-            line=dict(color='orange', dash='dot'),
+            line=dict(color='orange'),
         ),
         row=1, col=1
     )
@@ -274,11 +275,11 @@ def main():
     # クロスの種類を選択
     cross_type = st.radio(
         "クロスの種類を選択してください",
-        options=['both', 'golden', 'dead'],
+        options=['golden', 'dead', 'both'],
         format_func=lambda x: {
-            'both': '両方',
             'golden': 'ゴールデンクロスのみ',
-            'dead': 'デッドクロスのみ'
+            'dead': 'デッドクロスのみ',
+            'both': '両方',
         }[x],
         horizontal=True
     )
