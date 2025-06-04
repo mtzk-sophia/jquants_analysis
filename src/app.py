@@ -1,4 +1,6 @@
 # %%
+from datetime import datetime, timedelta
+
 import pandas as pd
 from pathlib import Path
 import plotly.graph_objects as go
@@ -22,6 +24,34 @@ def load_stock_prices():
         parse_dates=['Date'],
     )
     return df
+
+
+def get_recent_cross_companies(df: pd.DataFrame, days: int = 5) -> pd.DataFrame:
+    """
+    直近の指定日数でMACDのクロスが発生した企業を取得
+    
+    Args:
+        df (pd.DataFrame): 株価データ
+        days (int): 直近何日分を確認するか（デフォルト: 5）
+    
+    Returns:
+        pd.DataFrame: クロスが発生した企業の情報
+    """
+    # 日付を文字列からdatetimeに変換
+    df['Date'] = pd.to_datetime(df['Date'])
+    
+    # 直近の日付を取得
+    latest_date = df['Date'].max()
+    start_date = latest_date - timedelta(days=days)
+    
+    # 直近の期間でクロスが発生した企業を抽出
+    recent_data = df[df['Date'] >= start_date]
+    cross_companies = recent_data[
+        (recent_data['MACD_golden_cross'] == True) | 
+        (recent_data['MACD_dead_cross'] == True)
+    ][['Code', 'CompanyName']].drop_duplicates()
+    
+    return cross_companies
 
 
 def plot_stock_info_streamlit(df, code, company_name, title: str = "株価チャート"):
@@ -230,9 +260,15 @@ def main():
     df = load_stock_prices()
     df_with_indicators = process_stock_data(df)
     
+    # 直近5営業日でクロスが発生した企業を取得
+    cross_companies = get_recent_cross_companies(df_with_indicators)
+    
+    if len(cross_companies) == 0:
+        st.warning("直近5営業日でMACDのクロスが発生した企業はありません。")
+        return
+    
     # 企業選択
-    companies = df[['Code', 'CompanyName']].drop_duplicates()
-    company_options = [f"{row['CompanyName']} ({row['Code']})" for _, row in companies.iterrows()]
+    company_options = [f"{row['CompanyName']} ({row['Code']})" for _, row in cross_companies.iterrows()]
     selected_company = st.selectbox("企業を選択してください", company_options)
     
     # 選択された企業のコードを取得
