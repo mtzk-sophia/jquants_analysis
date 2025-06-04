@@ -1,6 +1,6 @@
-# %%
 from datetime import datetime, timedelta
 
+import jpholiday
 import pandas as pd
 from pathlib import Path
 import plotly.graph_objects as go
@@ -17,7 +17,7 @@ def load_stock_prices():
     Returns:
         pd.DataFrame: 株価データ
     """
-    file_name = 'stock_prices.csv'
+    file_name = 'stock_prices_prime_bank.csv'
     file_path = Path(__file__).parent.parent / 'data' / 'processed' / file_name
     df = pd.read_csv(
         file_path,
@@ -76,9 +76,12 @@ def plot_stock_info_streamlit(df, code, company_name, title: str = "株価チャ
 
     # 土日祝日を除外
     # df = remove_holidays(df)
+
+    # 祝日を取得
+    holidays = [holiday[0] for holiday in jpholiday.between(stock_data['Date'].min(), stock_data['Date'].max())]
     
     # 日付を文字列に変換
-    stock_data["Date"] = stock_data["Date"].dt.strftime('%Y-%m-%d')
+    # stock_data["Date"] = stock_data["Date"].dt.strftime('%Y-%m-%d')
     
     # MACDのゴールデンクロスを検出
     golden_cross_dates = stock_data.loc[stock_data['MACD_golden_cross']==True, 'Date']
@@ -254,6 +257,13 @@ def plot_stock_info_streamlit(df, code, company_name, title: str = "株価チャ
         hovermode='x unified'
     )
 
+    fig.update_xaxes(
+    rangebreaks=[
+        dict(bounds=["sat", "mon"]),
+        dict(values=holidays)
+    ]
+    )
+
     # Streamlitで表示（コンテナ幅いっぱいに表示）
     st.plotly_chart(fig, use_container_width=True, config={'displayModeBar': True})
 
@@ -305,4 +315,3 @@ def main():
 if __name__ == "__main__":
     main()
 
-# %%
