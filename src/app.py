@@ -26,13 +26,14 @@ def load_stock_prices():
     return df
 
 
-def get_recent_cross_companies(df: pd.DataFrame, days: int = 5) -> pd.DataFrame:
+def get_recent_cross_companies(df: pd.DataFrame, days: int = 5, cross_type: str = 'both') -> pd.DataFrame:
     """
     直近の指定日数でMACDのクロスが発生した企業を取得
     
     Args:
         df (pd.DataFrame): 株価データ
         days (int): 直近何日分を確認するか（デフォルト: 5）
+        cross_type (str): クロスの種類（'golden', 'dead', 'both'）
     
     Returns:
         pd.DataFrame: クロスが発生した企業の情報
@@ -46,10 +47,16 @@ def get_recent_cross_companies(df: pd.DataFrame, days: int = 5) -> pd.DataFrame:
     
     # 直近の期間でクロスが発生した企業を抽出
     recent_data = df[df['Date'] >= start_date]
-    cross_companies = recent_data[
-        (recent_data['MACD_golden_cross'] == True) | 
-        (recent_data['MACD_dead_cross'] == True)
-    ][['Code', 'CompanyName']].drop_duplicates()
+    
+    # クロスの種類に応じて条件を設定
+    if cross_type == 'golden':
+        cross_condition = recent_data['MACD_golden_cross'] == True
+    elif cross_type == 'dead':
+        cross_condition = recent_data['MACD_dead_cross'] == True
+    else:  # 'both'
+        cross_condition = (recent_data['MACD_golden_cross'] == True) | (recent_data['MACD_dead_cross'] == True)
+    
+    cross_companies = recent_data[cross_condition][['Code', 'CompanyName']].drop_duplicates()
     
     return cross_companies
 
@@ -97,6 +104,8 @@ def plot_stock_info_streamlit(df, code, company_name, title: str = "株価チャ
             high=stock_data['High'],
             low=stock_data['Low'],
             close=stock_data['Close'],
+            increasing_line_color='red',
+            decreasing_line_color='lime',
             name='ローソク足',
         ),
         row=1, col=1
@@ -260,11 +269,23 @@ def main():
     df = load_stock_prices()
     df_with_indicators = process_stock_data(df)
     
+    # クロスの種類を選択
+    cross_type = st.radio(
+        "クロスの種類を選択してください",
+        options=['both', 'golden', 'dead'],
+        format_func=lambda x: {
+            'both': '両方',
+            'golden': 'ゴールデンクロスのみ',
+            'dead': 'デッドクロスのみ'
+        }[x],
+        horizontal=True
+    )
+    
     # 直近5営業日でクロスが発生した企業を取得
-    cross_companies = get_recent_cross_companies(df_with_indicators)
+    cross_companies = get_recent_cross_companies(df_with_indicators, cross_type=cross_type)
     
     if len(cross_companies) == 0:
-        st.warning("直近5営業日でMACDのクロスが発生した企業はありません。")
+        st.warning(f"直近5営業日で{'ゴールデン' if cross_type == 'golden' else 'デッド' if cross_type == 'dead' else 'MACDの'}クロスが発生した企業はありません。")
         return
     
     # 企業選択
