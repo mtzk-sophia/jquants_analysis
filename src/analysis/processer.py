@@ -10,7 +10,7 @@ def calculate_sma(data: pd.DataFrame, window: int) -> pd.Series:
     return data.rolling(window=window).mean()
 
 
-def calculate_bollinger_bands(data: pd.DataFrame, window: int = 20, num_std: float = 2.0) -> Dict[str, pd.Series]:
+def calculate_bollinger_bands(data: pd.DataFrame, window: int=25, num_std: float=2.0) -> Dict[str, pd.Series]:
     """ボリンジャーバンドを計算"""
     sma = calculate_sma(data, window)
     std = data.rolling(window=window).std()
