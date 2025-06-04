@@ -146,7 +146,8 @@ def plot_stock_info_streamlit(df, code, company_name, title: str = "株価チャ
             x=stock_data['Date'],
             y=stock_data['BB_upper'],
             name='BB Upper',
-            line=dict(color='gray', dash='dash'),
+            line=dict(color='aqua'),
+            opacity=0.7,
         ),
         row=1, col=1
     )
@@ -155,7 +156,8 @@ def plot_stock_info_streamlit(df, code, company_name, title: str = "株価チャ
             x=stock_data['Date'],
             y=stock_data['BB_lower'],
             name='BB Lower',
-            line=dict(color='gray', dash='dash'),
+            line=dict(color='aqua'),
+            opacity=0.7,
         ),
         row=1, col=1
     )
