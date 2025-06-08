@@ -10,7 +10,7 @@ import streamlit as st
 from analysis.processer import process_stock_data
 
 
-def load_stock_prices():
+def load_stock_prices_analyzed():
     """
     株価データを読み込む関数
     
@@ -279,8 +279,7 @@ def main():
     
     st.title('株価チャート分析アプリ')
     
-    df = load_stock_prices()
-    df_with_indicators = process_stock_data(df)
+    df_with_indicators = load_stock_prices_analyzed()
     
     # クロスの種類を選択
     cross_type = st.radio(
