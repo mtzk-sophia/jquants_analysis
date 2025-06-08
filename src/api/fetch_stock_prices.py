@@ -1,4 +1,3 @@
-# %%
 import os
 from datetime import datetime, timedelta
 
@@ -89,7 +88,7 @@ def fetch_stock_prices():
 
     # 株価データの取得期間を設定
     to_date = datetime.now().strftime("%Y-%m-%d")
-    from_date = (datetime.now() - timedelta(days=(365*3))).strftime("%Y-%m-%d")
+    from_date = (datetime.now() - timedelta(days=(365*2))).strftime("%Y-%m-%d")
 
     # 各企業の株価データを取得
     all_stock_prices = []
@@ -111,7 +110,7 @@ def fetch_stock_prices():
         combined_data = pd.concat(all_stock_prices, ignore_index=True)
         print(combined_data.shape)
         # データを保存
-        output_dir = Path(__file__).parent.parent.parent / 'data' / 'processed'
+        output_dir = Path(__file__).parent.parent.parent / 'data' / 'raw'
         output_dir.mkdir(parents=True, exist_ok=True)
         output_file = output_dir / 'stock_prices.csv'
         combined_data.to_csv(output_file, index=False)
@@ -122,4 +121,3 @@ def fetch_stock_prices():
 
 if __name__ == "__main__":
     fetch_stock_prices()
-# %%

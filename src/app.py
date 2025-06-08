@@ -17,7 +17,7 @@ def load_stock_prices():
     Returns:
         pd.DataFrame: 株価データ
     """
-    file_name = 'stock_prices_prime_bank.csv'
+    file_name = 'stock_prices_analyzed.csv'
     file_path = Path(__file__).parent.parent / 'data' / 'processed' / file_name
     df = pd.read_csv(
         file_path,
