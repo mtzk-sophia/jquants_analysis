@@ -1,6 +1,6 @@
 # %%
-from get_refresh_token import get_refresh_token
-from get_id_token import get_id_token
+from .get_refresh_token import get_refresh_token
+from .get_id_token import get_id_token
 
 
 def get_all_tokens():

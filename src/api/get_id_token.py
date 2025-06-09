@@ -2,7 +2,7 @@ import json
 import os
 import requests
 
-from token_utils import load_env, update_env_file
+from .token_utils import load_env, update_env_file
 
 
 def get_id_token():
