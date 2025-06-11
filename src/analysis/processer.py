@@ -64,7 +64,7 @@ def detect_macd_crossovers(macd_line: pd.Series, signal_line: pd.Series) -> Dict
     }
 
 
-def detect_band_walk(close: pd.Series, upper_band: pd.Series, lower_band: pd.Series, window: int = 25, threshold: float = 0.02) -> Dict[str, pd.Series]:
+def detect_band_walk(close: pd.Series, upper_band: pd.Series, lower_band: pd.Series, window: int = 25, threshold: float = 0.05) -> Dict[str, pd.Series]:
     """バンドウォークを上部と下部に分けて検出する関数
     
     Args:
@@ -72,7 +72,7 @@ def detect_band_walk(close: pd.Series, upper_band: pd.Series, lower_band: pd.Ser
         upper_band: ボリンジャーバンドの上限
         lower_band: ボリンジャーバンドの下限
         window: 判定する期間（デフォルト25日）
-        threshold: 価格変動の閾値（デフォルト2%）
+        threshold: 価格変動の閾値（デフォルト5%）
     
     Returns:
         Dict[str, pd.Series]: 
@@ -88,13 +88,13 @@ def detect_band_walk(close: pd.Series, upper_band: pd.Series, lower_band: pd.Ser
     
     # 上部バンドウォークの条件：
     # 1. 価格変動が閾値以下
-    # 2. 価格がバンドの上部にある（0.7-0.9の範囲）
-    upper_band_walk = (price_change <= threshold) & (price_position.between(0.7, 0.9))
+    # 2. 価格がバンドの上部にある（0.8-0.9の範囲）
+    upper_band_walk = (price_change <= threshold) & (price_position.between(0.8, 0.9))
     
     # 下部バンドウォークの条件：
     # 1. 価格変動が閾値以下
-    # 2. 価格がバンドの下部にある（0.1-0.3の範囲）
-    lower_band_walk = (price_change <= threshold) & (price_position.between(0.1, 0.3))
+    # 2. 価格がバンドの下部にある（0.1-0.2の範囲）
+    lower_band_walk = (price_change <= threshold) & (price_position.between(0.1, 0.2))
     
     return {
         'upper_band_walk': upper_band_walk,
