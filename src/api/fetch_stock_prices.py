@@ -67,19 +67,35 @@ def load_listed_companies():
         dtype={'Code': str},
         parse_dates=['Date'],
     )
+    return df
+
+
+def load_top500_companies():
+    """
+    取引量上位500社のデータを読み込む関数
     
+    Returns:
+        pd.DataFrame: 取引量上位300社のデータフレーム
+    """
+    processed_data_dir = Path(__file__).parent.parent.parent / 'data' / 'processed'
+    top500_file_path = processed_data_dir / 'turnover_top500_companies.csv'
+    
+    df = pd.read_csv(
+        top500_file_path,
+        dtype={'Code': str}
+    )
     return df
 
 
 def fetch_stock_prices():
-    target_market = ['プライム', 'スタンダード']
-    target_sector = ['情報･通信業', 'サービス業', '銀行', '精密機器', '金属製品']
-
+    # 取引量上位500社のデータを読み込む
+    df_top500 = load_top500_companies()
+    
+    # 上場企業データを読み込む
     df = load_listed_companies()
-    df_prime_bank = df[
-        (df["MarketCodeName"].isin(target_market))
-        & (df["Sector33CodeName"].isin(target_sector))
-    ]
+    
+    # 取引量上位500社に含まれる企業のみを抽出
+    df_target = df[df["Code"].isin(df_top500["Code"])]
 
     # 環境変数からIDトークンを取得
     id_token = os.getenv('JQUANTS_ID_TOKEN')
@@ -93,7 +109,7 @@ def fetch_stock_prices():
     # 各企業の株価データを取得
     all_stock_prices = []
 
-    for _, row in df_prime_bank.iterrows():
+    for _, row in df_target.iterrows():
         code = row["Code"]
         company_name = row["CompanyName"]
         print(f"Fetching data for {company_name} ({code})...")
