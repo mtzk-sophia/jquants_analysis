@@ -14,6 +14,7 @@ from src.api.fetch_stock_prices import fetch_stock_prices
 from src.analysis.processer import process_stock_data
 import pandas as pd
 
+
 def main():
     print("1. トークンの取得を開始します...")
     if not get_all_tokens():
