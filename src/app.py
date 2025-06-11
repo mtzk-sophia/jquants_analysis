@@ -27,13 +27,13 @@ def load_stock_prices_analyzed():
     return df
 
 
-def get_recent_cross_companies(df: pd.DataFrame, days: int = 3, cross_type: str = 'golden') -> pd.DataFrame:
+def get_recent_cross_companies(df: pd.DataFrame, days: int = 1, cross_type: str = 'golden') -> pd.DataFrame:
     """
     直近の指定日数でMACDのクロスが発生した企業を取得
     
     Args:
         df (pd.DataFrame): 株価データ
-        days (int): 直近何日分を確認するか（デフォルト: 3）
+        days (int): 直近何日分を確認するか（デフォルト: 1）
         cross_type (str): クロスの種類（'golden', 'dead'）
     
     Returns:
@@ -91,6 +91,64 @@ def get_recent_band_walk_companies(df: pd.DataFrame, days: int = 3, band_type: s
     band_walk_companies = recent_data[band_condition][['Code', 'CompanyName']].drop_duplicates()
     
     return band_walk_companies
+
+
+def get_recent_golden_cross_upper_band_walk_companies(df: pd.DataFrame, days: int = 3) -> pd.DataFrame:
+    """
+    直近の指定日数でMACDゴールデンクロスと上部バンドウォークの両方が発生した企業を取得
+    
+    Args:
+        df (pd.DataFrame): 株価データ
+        days (int): 直近何日分を確認するか（デフォルト: 3）
+    
+    Returns:
+        pd.DataFrame: 条件を満たす企業の情報
+    """
+    # 日付を文字列からdatetimeに変換
+    df['Date'] = pd.to_datetime(df['Date'])
+    
+    # 直近の日付を取得
+    latest_date = df['Date'].max()
+    start_date = latest_date - timedelta(days=days)
+    
+    # 直近の期間で条件を満たす企業を抽出
+    recent_data = df[df['Date'] >= start_date]
+    
+    # ゴールデンクロスと上部バンドウォークの両方の条件
+    condition = (recent_data['MACD_golden_cross'] == True) & (recent_data['UpperBandWalk'] == True)
+    
+    target_companies = recent_data[condition][['Code', 'CompanyName']].drop_duplicates()
+    
+    return target_companies
+
+
+def get_recent_dead_cross_lower_band_walk_companies(df: pd.DataFrame, days: int = 3) -> pd.DataFrame:
+    """
+    直近の指定日数でMACDデッドクロスと下部バンドウォークの両方が発生した企業を取得
+    
+    Args:
+        df (pd.DataFrame): 株価データ
+        days (int): 直近何日分を確認するか（デフォルト: 3）
+    
+    Returns:
+        pd.DataFrame: 条件を満たす企業の情報
+    """
+    # 日付を文字列からdatetimeに変換
+    df['Date'] = pd.to_datetime(df['Date'])
+    
+    # 直近の日付を取得
+    latest_date = df['Date'].max()
+    start_date = latest_date - timedelta(days=days)
+    
+    # 直近の期間で条件を満たす企業を抽出
+    recent_data = df[df['Date'] >= start_date]
+    
+    # デッドクロスと下部バンドウォークの両方の条件
+    condition = (recent_data['MACD_dead_cross'] == True) & (recent_data['LowerBandWalk'] == True)
+    
+    target_companies = recent_data[condition][['Code', 'CompanyName']].drop_duplicates()
+    
+    return target_companies
 
 
 def plot_stock_info_streamlit(df, code, company_name, title: str = "株価チャート"):
@@ -315,10 +373,12 @@ def main():
     # 分析タイプの選択
     analysis_type = st.radio(
         "分析タイプを選択してください",
-        options=['macd', 'band_walk'],
+        options=['macd', 'band_walk', 'golden_upper', 'dead_lower'],
         format_func=lambda x: {
             'macd': 'MACDクロス',
             'band_walk': 'バンドウォーク',
+            'golden_upper': 'ゴールデンクロス+上部バンドウォーク',
+            'dead_lower': 'デッドクロス+下部バンドウォーク',
         }[x],
         horizontal=True
     )
@@ -341,7 +401,7 @@ def main():
         if len(target_companies) == 0:
             st.warning(f"直近5営業日で{'ゴールデン' if cross_type == 'golden' else 'デッド'}クロスが発生した企業はありません。")
             return
-    else:  # band_walk
+    elif analysis_type == 'band_walk':
         # バンドウォークの種類を選択
         band_type = st.radio(
             "バンドウォークの種類を選択してください",
@@ -359,6 +419,21 @@ def main():
         if len(target_companies) == 0:
             st.warning(f"直近5営業日で{'上部' if band_type == 'upper' else '下部'}バンドウォークが発生した企業はありません。")
             return
+    elif analysis_type == 'golden_upper':
+        # 直近5営業日でゴールデンクロスと上部バンドウォークが発生した企業を取得
+        target_companies = get_recent_golden_cross_upper_band_walk_companies(df_with_indicators)
+        
+        if len(target_companies) == 0:
+            st.warning("直近5営業日でゴールデンクロスと上部バンドウォークが同時に発生した企業はありません。")
+            return
+    else:  # dead_lower
+        # 直近5営業日でデッドクロスと下部バンドウォークが発生した企業を取得
+        target_companies = get_recent_dead_cross_lower_band_walk_companies(df_with_indicators)
+        
+        if len(target_companies) == 0:
+            st.warning("直近5営業日でデッドクロスと下部バンドウォークが同時に発生した企業はありません。")
+            return
+    
     
     # 企業選択
     company_options = [f"{row['CompanyName']} ({row['Code']})" for _, row in target_companies.iterrows()]
