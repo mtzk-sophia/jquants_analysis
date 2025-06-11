@@ -27,14 +27,14 @@ def load_stock_prices_analyzed():
     return df
 
 
-def get_recent_cross_companies(df: pd.DataFrame, days: int = 3, cross_type: str = 'both') -> pd.DataFrame:
+def get_recent_cross_companies(df: pd.DataFrame, days: int = 3, cross_type: str = 'golden') -> pd.DataFrame:
     """
     直近の指定日数でMACDのクロスが発生した企業を取得
     
     Args:
         df (pd.DataFrame): 株価データ
         days (int): 直近何日分を確認するか（デフォルト: 3）
-        cross_type (str): クロスの種類（'golden', 'dead', 'both'）
+        cross_type (str): クロスの種類（'golden', 'dead'）
     
     Returns:
         pd.DataFrame: クロスが発生した企業の情報
@@ -52,14 +52,45 @@ def get_recent_cross_companies(df: pd.DataFrame, days: int = 3, cross_type: str 
     # クロスの種類に応じて条件を設定
     if cross_type == 'golden':
         cross_condition = recent_data['MACD_golden_cross'] == True
-    elif cross_type == 'dead':
+    else:  # 'dead'
         cross_condition = recent_data['MACD_dead_cross'] == True
-    else:  # 'both'
-        cross_condition = (recent_data['MACD_golden_cross'] == True) | (recent_data['MACD_dead_cross'] == True)
     
     cross_companies = recent_data[cross_condition][['Code', 'CompanyName']].drop_duplicates()
     
     return cross_companies
+
+
+def get_recent_band_walk_companies(df: pd.DataFrame, days: int = 3, band_type: str = 'upper') -> pd.DataFrame:
+    """
+    直近の指定日数でバンドウォークが発生した企業を取得
+    
+    Args:
+        df (pd.DataFrame): 株価データ
+        days (int): 直近何日分を確認するか（デフォルト: 3）
+        band_type (str): バンドウォークの種類（'upper', 'lower'）
+    
+    Returns:
+        pd.DataFrame: バンドウォークが発生した企業の情報
+    """
+    # 日付を文字列からdatetimeに変換
+    df['Date'] = pd.to_datetime(df['Date'])
+    
+    # 直近の日付を取得
+    latest_date = df['Date'].max()
+    start_date = latest_date - timedelta(days=days)
+    
+    # 直近の期間でバンドウォークが発生した企業を抽出
+    recent_data = df[df['Date'] >= start_date]
+    
+    # バンドウォークの種類に応じて条件を設定
+    if band_type == 'upper':
+        band_condition = recent_data['UpperBandWalk'] == True
+    else:  # 'lower'
+        band_condition = recent_data['LowerBandWalk'] == True
+    
+    band_walk_companies = recent_data[band_condition][['Code', 'CompanyName']].drop_duplicates()
+    
+    return band_walk_companies
 
 
 def plot_stock_info_streamlit(df, code, company_name, title: str = "株価チャート"):
@@ -281,27 +312,56 @@ def main():
     
     df_with_indicators = load_stock_prices_analyzed()
     
-    # クロスの種類を選択
-    cross_type = st.radio(
-        "クロスの種類を選択してください",
-        options=['golden', 'dead', 'both'],
+    # 分析タイプの選択
+    analysis_type = st.radio(
+        "分析タイプを選択してください",
+        options=['macd', 'band_walk'],
         format_func=lambda x: {
-            'golden': 'ゴールデンクロスのみ',
-            'dead': 'デッドクロスのみ',
-            'both': '両方',
+            'macd': 'MACDクロス',
+            'band_walk': 'バンドウォーク',
         }[x],
         horizontal=True
     )
     
-    # 直近5営業日でクロスが発生した企業を取得
-    cross_companies = get_recent_cross_companies(df_with_indicators, cross_type=cross_type)
-    
-    if len(cross_companies) == 0:
-        st.warning(f"直近5営業日で{'ゴールデン' if cross_type == 'golden' else 'デッド' if cross_type == 'dead' else 'MACDの'}クロスが発生した企業はありません。")
-        return
+    if analysis_type == 'macd':
+        # クロスの種類を選択
+        cross_type = st.radio(
+            "クロスの種類を選択してください",
+            options=['golden', 'dead'],
+            format_func=lambda x: {
+                'golden': 'ゴールデンクロス',
+                'dead': 'デッドクロス',
+            }[x],
+            horizontal=True
+        )
+        
+        # 直近5営業日でクロスが発生した企業を取得
+        target_companies = get_recent_cross_companies(df_with_indicators, cross_type=cross_type)
+        
+        if len(target_companies) == 0:
+            st.warning(f"直近5営業日で{'ゴールデン' if cross_type == 'golden' else 'デッド'}クロスが発生した企業はありません。")
+            return
+    else:  # band_walk
+        # バンドウォークの種類を選択
+        band_type = st.radio(
+            "バンドウォークの種類を選択してください",
+            options=['upper', 'lower'],
+            format_func=lambda x: {
+                'upper': '上部バンドウォーク',
+                'lower': '下部バンドウォーク',
+            }[x],
+            horizontal=True
+        )
+        
+        # 直近5営業日でバンドウォークが発生した企業を取得
+        target_companies = get_recent_band_walk_companies(df_with_indicators, band_type=band_type)
+        
+        if len(target_companies) == 0:
+            st.warning(f"直近5営業日で{'上部' if band_type == 'upper' else '下部'}バンドウォークが発生した企業はありません。")
+            return
     
     # 企業選択
-    company_options = [f"{row['CompanyName']} ({row['Code']})" for _, row in cross_companies.iterrows()]
+    company_options = [f"{row['CompanyName']} ({row['Code']})" for _, row in target_companies.iterrows()]
     selected_company = st.selectbox("企業を選択してください", company_options)
     
     # 選択された企業のコードを取得
