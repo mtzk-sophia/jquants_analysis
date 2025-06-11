@@ -42,8 +42,8 @@ def analyze_volume():
     print(turnover_by_company_sorted.head(20))
 
     # 結果をCSVファイルとして保存
-    turnover_by_company_sorted.head(300).to_csv(
-        data_dir / 'processed' / 'turnover_top300_companies.csv'
+    turnover_by_company_sorted.head(500).to_csv(
+        data_dir / 'processed' / 'turnover_top500_companies.csv'
     )
 
 
