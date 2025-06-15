@@ -182,11 +182,11 @@ def plot_stock_info_streamlit(df, code, company_name, title: str = "株価チャ
     
     # サブプロットの作成
     fig = make_subplots(
-        rows=2, cols=1,
+        rows=3, cols=1,
         shared_xaxes=True,
         vertical_spacing=0.05,
-        row_heights=[0.5, 0.25],
-        subplot_titles=(title, 'MACD')
+        row_heights=[0.4, 0.3, 0.3],  # 3つのグラフの高さ比率を調整
+        subplot_titles=(title, 'MACD', '出来高')
     )
 
     # ローソク足チャート
@@ -318,30 +318,32 @@ def plot_stock_info_streamlit(df, code, company_name, title: str = "株価チャ
         row=2, col=1
     )
 
+    # 出来高の棒グラフ
+    fig.add_trace(
+        go.Bar(
+            x=stock_data['Date'],
+            y=stock_data['Volume'],
+            name='出来高',
+            marker_color='orange',
+            opacity=0.7,
+        ),
+        row=3, col=1
+    )
+
     # レイアウトの設定
     fig.update_layout(
-        height=750,
+        height=900,  # 高さを増やして3つのグラフを表示
         xaxis_rangeslider_visible=False,
         showlegend=True,
         legend=dict(
-            orientation="h",
-            yanchor="bottom",
-            y=1.02,
-            xanchor="right",
-            x=1
+            orientation="h",  # 横方向に戻す
+            yanchor="bottom",  # 下部揃え
+            y=1.02,  # 上部に配置
+            xanchor="right",  # 右揃え
+            x=1  # 右端に配置
         ),
-        # 日付表示の設定
-        # xaxis=dict(
-        #     type='category',
-        #     tickangle=45,
-        #     tickmode='auto',
-        #     nticks=10,
-        #     showgrid=True,
-        #     gridcolor='lightgray',
-        #     rangeslider=dict(visible=False)
-        # ),
         # マージンの調整
-        margin=dict(l=0, r=0, t=50, b=0),
+        margin=dict(l=0, r=0, t=100, b=0),  # 上部のマージンを増やして凡例用のスペースを確保
         # ホバー設定
         hovermode='x unified'
     )
@@ -354,7 +356,7 @@ def plot_stock_info_streamlit(df, code, company_name, title: str = "株価チャ
     )
 
     # Streamlitで表示（コンテナ幅いっぱいに表示）
-    st.plotly_chart(fig, use_container_width=True, config={'displayModeBar': True})
+    st.plotly_chart(fig, use_container_width=True, config={'displayModeBar': True, 'displaylogo': False})
 
 
 def main():
