@@ -117,6 +117,7 @@ def process_stock_data(df: pd.DataFrame) -> pd.DataFrame:
         company_data['SMA5'] = calculate_sma(close_prices, 5)
         company_data['SMA25'] = calculate_sma(close_prices, 25)
         company_data['SMA75'] = calculate_sma(close_prices, 75)
+        company_data['SMA200'] = calculate_sma(close_prices, 200)
         
         # ボリンジャーバンドの計算
         bb = calculate_bollinger_bands(close_prices)
