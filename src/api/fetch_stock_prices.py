@@ -112,11 +112,15 @@ def fetch_stock_prices():
     for _, row in df_target.iterrows():
         code = row["Code"]
         company_name = row["CompanyName"]
+        sector17_name = row["Sector17CodeName"]
+        sector33_name = row["Sector33CodeName"]
         print(f"Fetching data for {company_name} ({code})...")
 
         try:
             stock_prices = fetch_daily_quotes(code, from_date, to_date, id_token)
             stock_prices["CompanyName"] = company_name
+            stock_prices["Sector17CodeName"] = sector17_name
+            stock_prices["Sector33CodeName"] = sector33_name
             all_stock_prices.append(stock_prices)
         except Exception as e:
             print(f"Error fetching data for {code}: {e}")
